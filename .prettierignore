@@ -1,0 +1,7 @@
+packs/
+assets/
+.idea/
+package-lock.json
+
+# Glimmer parser rejects valid Foundry Handlebars (e.g. blocks inside attributes)
+*.hbs

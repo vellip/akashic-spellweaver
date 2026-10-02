@@ -1,0 +1,14 @@
+{
+  "shatter": {
+    "essence.one": "{count} essence",
+    "burned": "How many essences will you shatter?",
+    "effect": "Burning Power",
+    "slots": "Choose a veil slot to shatter.",
+    "essence.other": "{count} essences"
+  },
+  "card": {
+    "heading": "Shatter Veils",
+    "message.one": "<strong>{actor}</strong> shatters {slotLink} with {essences} essence, channeling <strong>{effect}</strong>.",
+    "message.other": "<strong>{actor}</strong> shatters {slotLink} with {essences} essences, channeling <strong>{effect}</strong>."
+  }
+}

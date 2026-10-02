@@ -1,0 +1,41 @@
+.shatter-label {
+    flex: 2;
+}
+
+.shatter-card h3 {
+    margin: 0 0 0.25em;
+    font-size: 1.1em;
+    border-bottom: 1px solid var(--color-border-light-2, #999);
+}
+
+.shatter-card .effect-description {
+    margin-top: 0.5em;
+    padding: 0.25em 0.5em;
+    font-size: 0.9em;
+    border-left: 3px solid var(--color-border-highlight, #ff6400);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.shattered {
+    color: var(--pf1-failure);
+}
+
+.pf1.level-up .spellweaver-choices {
+    grid-column: 1 / -1;
+}
+
+.pf1.level-up .spellweaver-choices .hint {
+    font-size: var(--font-size-12, 12px);
+    opacity: 0.8;
+    margin: 0.25em 0 0;
+}
+
+.spellweaver-uses {
+    flex: 0 0 4em;
+    text-align: center;
+}
+
+.spellweaver-uses.over-limit {
+    color: var(--pf1-failure);
+    font-weight: bold;
+}
