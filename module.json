@@ -3,7 +3,7 @@
   "title": "Akashic Spellweaver Class",
   "description": "Adds a new class to PF1, the Akashic Spellweaver Class, based on this specification https://metzo.miraheze.org/wiki/Spellweaver_Retold.",
   "authors": [{"name": "Philipp Veller", "email": "mail@vellip.de", "url": "https://www.fiverr.com/s/jyjEr37"}],
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "LICENSE",
   "readme": "README.md",
   "esmodules": ["scripts/init.mjs"],
@@ -17,8 +17,6 @@
   "download": "https://github.com/vellip/akashic-spellweaver/releases/download/v0.1.1/module.zip",
   "bugs": "https://github.com/vellip/akashic-spellweaver/issues",
   "changelog": "https://github.com/vellip/akashic-spellweaver/blob/main/CHANGELOG.md",
-  "readme": "README.md",
-  "license": "LICENSE",
   "relationships": {
     "systems": [
       {
