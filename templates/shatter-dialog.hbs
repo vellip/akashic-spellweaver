@@ -11,10 +11,11 @@
                         [bound]{{/if}}
                     </option>
                 {{/each}}
+                <option value="none">{{localize 'shatter.none'}}</option>
             </select>
         </div>
     </div>
-    <div class="form-group">
+    <div class="form-group" data-shatter-effect>
         <label class="shatter-label">
             {{localize 'shatter.effect'}}
         </label>
@@ -26,10 +27,12 @@
             </select>
         </div>
     </div>
-    {{#each effects}}
-        <div class="effect-description {{#unless @first}}hidden{{/unless}}" data-effect="{{@key}}">
-            <h4>{{this.label}}</h4>
-            <p data-description="{{@key}}">{{this.description}}</p>
-        </div>
-    {{/each}}
+    <div data-shatter-effect>
+        {{#each effects}}
+            <div class="effect-description {{#unless @first}}hidden{{/unless}}" data-effect="{{@key}}">
+                <h4>{{this.label}}</h4>
+                <p data-description="{{@key}}">{{this.description}}</p>
+            </div>
+        {{/each}}
+    </div>
 </div>

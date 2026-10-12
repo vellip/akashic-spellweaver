@@ -4,6 +4,7 @@
     "burned": "How many essences will you shatter?",
     "effect": "Burning Power",
     "slots": "Choose a veil slot to shatter.",
+    "none": "Don't shatter a veil",
     "essence.other": "{count} essences"
   },
   "card": {

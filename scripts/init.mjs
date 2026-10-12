@@ -2,7 +2,9 @@ import {skipShatterRollDialog} from "./shatter-dialog.mjs";
 import {
     addVeilCountFormula,
     automaticHeightening,
+    hookActionSheet,
     hookActorSheet,
+    hookSpellSheet,
     hookVeilSheet,
     onPreCreateItem,
     prepareSpellweaverBook,
@@ -38,6 +40,14 @@ Hooks.on("renderVeilItemSheet", (app, html, data) => {
 
 Hooks.on("renderActorSheet", (app, html, data) => {
     hookActorSheet(app, html);
+});
+
+Hooks.on("renderItemSheet", (app, html, data) => {
+    hookSpellSheet(app, html);
+});
+
+Hooks.on("renderItemActionSheet", (app, html, data) => {
+    hookActionSheet(app, html);
 });
 
 Hooks.on("pf1GetRollData", (item, rollData) => {

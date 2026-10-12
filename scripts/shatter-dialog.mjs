@@ -1,5 +1,7 @@
 import {getAvailableVeils, shatterVeil} from "./cast-interception.mjs";
 
+const NO_SHATTER = "none";
+
 const effects = {
     bolsteringEssence: {
         label: "Bolstering Essence",
@@ -81,6 +83,11 @@ export async function shatterDialog(actor, veils) {
             });
 
             slotsSelect.addEventListener("change", () => {
+                const noShatter = slotsSelect.value === NO_SHATTER;
+                dialog.element.querySelectorAll("[data-shatter-effect]").forEach((el) => {
+                    el.classList.toggle("hidden", noShatter);
+                });
+                if (noShatter) return;
                 const id = effectSelect.value;
                 updateBurningPowerText(dialog, actor, id, slotsSelect);
             });
@@ -95,14 +102,20 @@ export async function shatterDialog(actor, veils) {
                 label: "Cancel",
             },
             {
-                label: "Shatter",
+                label: "Cast",
                 action: "shatter",
                 default: true,
                 callback: (event, button) => new foundry.applications.ux.FormDataExtended(button.form).object,
             },
         ],
     });
-    if (!form || typeof form !== "object" || !form.slot || !form.effect) {
+    if (!form || typeof form !== "object" || !form.slot) {
+        return undefined;
+    }
+    if (form.slot === NO_SHATTER) {
+        return {veil: null, effect: null};
+    }
+    if (!form.effect) {
         return undefined;
     }
 
@@ -138,7 +151,7 @@ export async function skipShatterRollDialog(wrapped, ...args) {
 
     args[0] = {...(args[0] ?? {}), skipDialog: true};
     const result = await wrapped(...args);
-    if (result != null && !result.err && !result.reject) {
+    if (choice.veil && result != null && !result.err && !result.reject) {
         await shatterVeil(choice.veil);
         await sendShatterMessage({slot: choice.veil, effect: choice.effect}, this.actor);
     }

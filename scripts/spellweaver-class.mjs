@@ -150,6 +150,16 @@ export function hookActorSheet(app, html) {
     if (!entry) return;
 
     const [bookId, book] = entry;
+
+    // Spell points only mirror the unshattered veils (see prepareSpellweaverBook), so show them as veils
+    const bookTab = html.find(`.spellbook-group[data-tab="${bookId}"]`);
+    const points = bookTab.find(".spell-points-current");
+    points.removeAttr("data-tooltip-extended");
+    points.find("h3").text("Veils Available");
+    const value = points.find(".value");
+    value.replaceWith($('<span class="value"></span>').text(value.text().trim()));
+    bookTab.find(".spell-points, .spell-points-rest").remove();
+    bookTab.find('input[name$=".spellPoints.useSystem"]').closest("label").remove();
     const spontaneous = book.spellPreparationMode === "spontaneous";
     const spells = actor.itemTypes.spell.filter((s) => s.system.spellbook === bookId);
 
@@ -168,6 +178,21 @@ export function hookActorSheet(app, html) {
                   data-tooltip="${spontaneous ? "Spells known" : "Prepared today"}">${used} / ${max}${bonusMax ? ` <span class="bonus">(+${bonusUsed}/${bonusMax})</span>` : ""}</div>`,
         );
     }
+}
+
+function isSpellweaverSpell(item) {
+    return item?.type === "spell" && item.spellbook?.class === "spellweaver";
+}
+
+// Spellweaving casts never spend spell points, so the cost fields would only mislead
+export function hookSpellSheet(app, html) {
+    if (!isSpellweaverSpell(app.item)) return;
+    html.find(".spellpoint-cost").remove();
+}
+
+export function hookActionSheet(app, html) {
+    if (!isSpellweaverSpell(app.item)) return;
+    html.find('input[name="uses.spellPointCost"]').closest(".form-group").remove();
 }
 
 const getMaxSpellLevel = (lvl) => (lvl >= 1 ? Math.min(7, Math.floor((lvl + 2) / 3)) : 0);

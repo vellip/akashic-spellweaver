@@ -40,7 +40,7 @@ export function setupCastInterception() {
 
             const result = await wrapped(...args);
             const succeeded = result != null && !result.err && !result.reject;
-            if (succeeded) {
+            if (succeeded && shatterResult.veil) {
                 await shatterVeil(shatterResult.veil);
                 await sendShatterMessage({slot: shatterResult.veil, effect: shatterResult.effect}, actor);
             }
