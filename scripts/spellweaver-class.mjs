@@ -1,3 +1,5 @@
+const MODULE_ID = "akashic-spellweaver";
+
 export async function setupClass(actor, classItem) {
     if (!actor.getFlag("akashic-magic", "veilweaver")) await actor.setFlag("akashic-magic", "veilweaver", true);
     if (!actor.getFlag("akashic-magic", "veilweavingAttr"))
@@ -24,11 +26,12 @@ export function prepareSpellweaverBook(actor) {
     const available = actor.items.filter(
         (i) => i.type === "akashic-magic.veil" && i.system.shaped && !i.getFlag("akashic-spellweaver", "shattered"),
     ).length;
+    const usable = Math.max(0, Math.min(available, getRemainingShatters(actor)));
 
     book.autoSpellLevelCalculation = false;
     book.spellPoints.useSystem = true;
-    book.spellPoints.maxFormula = `${available}`;
-    book.spellPoints.value = available;
+    book.spellPoints.maxFormula = `${usable}`;
+    book.spellPoints.value = usable;
 
     const cls = actor.itemTypes.class.find((c) => (c.system.tag || pf1.utils.createTag(c.name)) === "spellweaver");
     const classLevel = cls?.system.level ?? 0;
@@ -115,13 +118,27 @@ export function hookActorSheet(app, html) {
         '<a class="veil-control item-control items-unshatter" data-tooltip="Unshatter all Veils" name="unshatter"><i class="fa-solid fa-wand-magic-sparkles"></i></a>',
     );
 
+    if (!!actor.getItemByTag("limitedShatters")) {
+        html.find(".info-box.max-capacity").after(
+            `<div class="info-box max-shatter">
+        <h5><a disabled="">Available Shatters</a></h5>
+        <span class="value" data-tooltip="Your shatters are limited due to your archetype.">
+          ${getRemainingShatters(actor)}/${getShatterLimit(actor)}
+        </span>
+      </div>`,
+        );
+    }
+
     html.find(".items-unshatter").click(() => {
         const shattered = veils.filter((v) => v.getFlag("akashic-spellweaver", "shattered"));
         if (!shattered.length) return;
         app._forceShowVeilTab = true;
         actor.updateEmbeddedDocuments(
             "Item",
-            shattered.map((v) => ({_id: v.id, "flags.akashic-spellweaver.shattered": false})),
+            shattered.map((v) => ({
+                _id: v.id,
+                "flags.akashic-spellweaver.shattered": false,
+            })),
         );
     });
 
@@ -182,6 +199,27 @@ export function hookActorSheet(app, html) {
 
 function isSpellweaverSpell(item) {
     return item?.type === "spell" && item.spellbook?.class === "spellweaver";
+}
+
+function getSpellweaverLevel(actor) {
+    const cls = actor.itemTypes.class.find((c) => (c.system.tag || pf1.utils.createTag(c.name)) === "spellweaver");
+    return cls?.system.level ?? 0;
+}
+
+/** Max veils shattered as a cost at once; Infinity without Lord of Veils */
+export function getShatterLimit(actor) {
+    const hasLimit = !!actor.getItemByTag("limitedShatters");
+    if (!hasLimit) return Infinity;
+    const level = getSpellweaverLevel(actor);
+    return 2 + Math.floor(Math.max(0, level - 1) / 4); // 2, +1 at 5/9/13/17
+}
+
+export function getShatteredCount(actor) {
+    return actor.items.filter((i) => i.type === "akashic-magic.veil" && i.getFlag(MODULE_ID, "shattered")).length;
+}
+
+export function getRemainingShatters(actor) {
+    return getShatterLimit(actor) - getShatteredCount(actor);
 }
 
 // Spellweaving casts never spend spell points, so the cost fields would only mislead

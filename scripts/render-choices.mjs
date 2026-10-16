@@ -37,6 +37,83 @@ const STUDIES = {
     transcendental: {label: "Transcendental Shaper's Study"},
 };
 
+const ARCHETYPES = {
+    lordOfMagic: {
+        label: "Lord of Magic",
+    },
+    lordOfVeils: {
+        label: "Lord of Veils",
+        implemented: true,
+        classChanges: {
+            "system.bab": "low",
+            "system.hd": 6,
+            "system.skillsPerLevel": 2,
+            "system.savingThrows.ref.value": "low",
+            "system.armorProf": ["lgt"],
+            "system.weaponProf": ["simple"],
+        },
+        removeAssociations: [
+            "Compendium.akashic-spellweaver.spellweaver-class.Item.FAzVNoQBLtzqLz9v",
+            "Compendium.akashic-spellweaver.spellweaver-class.Item.OgsvHQTbZfWt4kfe",
+            "Compendium.akashic-spellweaver.spellweaver-class.Item.bYcHj9R8HRiV1Rbv",
+            "Compendium.akashic-spellweaver.spellweaver-class.Item.UOJ1BiEBRjh0xGtK",
+            "Compendium.akashic-spellweaver.spellweaver-class.Item.erNRLPkHvRezduKj",
+        ],
+        addAssociations: [
+            {
+                name: "Pinnacle Chakra Binding",
+                uuid: "Compendium.akashic-spellweaver.spellweaver-class.Item.QJqNKUvND7tKbjB0",
+                level: 18,
+            },
+            {
+                name: "High Chakra Binding",
+                uuid: "Compendium.akashic-spellweaver.spellweaver-class.Item.LPBEeHShIE1VZUPN",
+                level: 14,
+            },
+            {
+                name: "Middle Chakra Binding",
+                uuid: "Compendium.akashic-spellweaver.spellweaver-class.Item.s2y4h5blzihKibjR",
+                level: 8,
+            },
+            {
+                name: "Expanded Essence",
+                uuid: "Compendium.akashic-spellweaver.spellweaver-class.Item.eWI7apmnSjMKNDiK",
+                level: 2,
+            },
+            {
+                name: "Low Chakra Binding",
+                uuid: "Compendium.akashic-spellweaver.spellweaver-class.Item.QXoyoZEbFaM8QKpN",
+                level: 2,
+            },
+            {
+                name: "Lord of Veils Veilweaving",
+                uuid: "Compendium.akashic-spellweaver.spellweaver-class.Item.mPrxD53rAHYbvf5i",
+                level: 1,
+            },
+            {
+                name: "Limited Shatters",
+                uuid: "Compendium.akashic-spellweaver.spellweaver-class.Item.GRi3t7jZKebGO04w",
+                level: 1,
+            },
+            {
+                name: "Diminished Attributes",
+                uuid: "Compendium.akashic-spellweaver.spellweaver-class.Item.IQd1jGJaI2p0Iz7c",
+                level: 1,
+            },
+            {
+                name: "Scholarly Training",
+                uuid: "Compendium.akashic-spellweaver.spellweaver-class.Item.LYKL68OLfMP6bpyQ",
+                level: 1,
+            },
+        ],
+    },
+    naturespeakersStudy: {label: "Naturespeaker's Study"},
+    obsessionistsStudy: {label: "Obsessionist's Study"},
+    none: {label: "None", implemented: true},
+    soulcallersStudy: {label: "Soulcaller's Study"},
+    staticSoulsStudy: {label: "Static Soul's Study"},
+};
+
 const ABILITY_FEATURES = {
     int: [
         {
@@ -53,6 +130,7 @@ const ABILITY_FEATURES = {
         },
     ],
 };
+
 const DISCORD = {
     fortuitous: {
         implemented: true,
@@ -122,6 +200,13 @@ function buildChoicesHTML(app, choices, discordant) {
             </select>
         </div>
         
+        <div class="form-group">
+            <label for="${id}-archetype">Archetype</label>
+            <select id="${id}-archetype" name="spellweaver.archetype">
+                ${renderOptions(ARCHETYPES, choices.archetype)}
+            </select>
+        </div>
+        
         ${
             discordant
                 ? `
@@ -136,14 +221,22 @@ function buildChoicesHTML(app, choices, discordant) {
     </div>`;
 }
 
-Hooks.on("renderLevelUpForm", (app, html) => {
+function isSpellweaverWizard(app) {
     const item = app.item;
-    if (item?.type !== "class" || !app.isNewClass) return;
-    if (!item.getFlag("akashic-spellweaver", "isSpellweaver")) return;
+    return item?.type === "class" && app.isNewClass && item.getFlag("akashic-spellweaver", "isSpellweaver");
+}
 
-    const choices = {path: "arcanoweaver", study: "vicar", ability: "int", ...app.config.spellweaver};
+function resolveChoices(app) {
+    const choices = {
+        path: "arcanoweaver",
+        study: "vicar",
+        ability: "int",
+        archetype: "none",
+        ...app.config.spellweaver,
+    };
     if (!PATHS[choices.path]?.implemented) choices.path = "arcanoweaver";
     if (!STUDIES[choices.study]?.implemented) choices.study = "vicar";
+    if (!ARCHETYPES[choices.archetype]?.implemented) choices.archetype = "none";
     const abilities = Object.keys(PATHS[choices.path].abilities ?? {});
     if (abilities.length && !abilities.includes(choices.ability)) choices.ability = abilities[0];
 
@@ -151,21 +244,67 @@ Hooks.on("renderLevelUpForm", (app, html) => {
     if (discordant && !DISCORD[choices.discord]) choices.discord = "fortuitous";
     if (!discordant) choices.discord = null;
 
+    return {choices, discordant};
+}
+
+// Runs before getData so the level-up form renders the updated class and associations
+function applyChoices(app) {
+    const item = app.item;
+    const {choices, discordant} = resolveChoices(app);
+    app._swChoices = {choices, discordant};
+
     if (!foundry.utils.objectsEqual(item.getFlag("akashic-spellweaver", "choices") ?? {}, choices)) {
         app._swBaseAssoc ??= foundry.utils.deepClone(item._source.system.links?.classAssociations ?? []);
+        app._swBaseSystem ??= foundry.utils.deepClone(item._source.system);
+        const touched = new Set(Object.values(ARCHETYPES).flatMap((a) => Object.keys(a.classChanges ?? {})));
+        const resetChanges = Object.fromEntries(
+            [...touched].map((k) => [k, foundry.utils.getProperty({system: app._swBaseSystem}, k)]),
+        );
         const extra = [...(ABILITY_FEATURES[choices.ability] ?? [])];
         if (discordant) extra.push({...DISCORD[choices.discord], level: 1});
 
-        item.updateSource({
+        const archetype = ARCHETYPES[choices.archetype];
+        const archetypeChanges = {...(archetype.classChanges ?? {})};
+        // Diminished Attributes sets Ref equal to Fort; Resilient Discord still raises Fort to the better of Ref/Will, so Ref stays good
+        if (choices.discord === "resilient") delete archetypeChanges["system.savingThrows.ref.value"];
+        const allAssocs = [
+            ...app._swBaseAssoc,
+            ...extra.map(({name, uuid, level}) => ({name, uuid, level})),
+            ...(archetype.addAssociations ?? []),
+        ].filter((a) => !(archetype.removeAssociations ?? []).includes(a.uuid));
+
+        const classUpdates = {
             "system.casting.type": choices.ability === "cha" ? "spontaneous" : "prepared",
             "system.casting.ability": choices.ability,
-            "system.links.classAssociations": [
-                ...app._swBaseAssoc,
-                ...extra.map(({name, uuid, level}) => ({name, uuid, level})),
-            ],
+            "system.links.classAssociations": allAssocs,
             "flags.akashic-spellweaver.choices": choices,
-        });
+            "flags.akashic-spellweaver.archetype": choices.archetype,
+            ...resetChanges,
+            ...archetypeChanges,
+        };
+
+        item.updateSource(classUpdates);
+        app.mold?.updateSource(classUpdates);
+        delete app.config.associations;
+        app._initData();
     }
+}
+
+Hooks.once("libWrapper.Ready", () => {
+    libWrapper.register(
+        "akashic-spellweaver",
+        "pf1.applications.LevelUpForm.prototype.getData",
+        function (wrapped, ...args) {
+            if (isSpellweaverWizard(this)) applyChoices(this);
+            return wrapped(...args);
+        },
+        "WRAPPER",
+    );
+});
+
+Hooks.on("renderLevelUpForm", (app, html) => {
+    if (!isSpellweaverWizard(app) || !app._swChoices) return;
+    const {choices, discordant} = app._swChoices;
 
     const form = html.is("form") ? html : html.find("form");
     form.find("> section")
@@ -176,6 +315,8 @@ Hooks.on("renderLevelUpForm", (app, html) => {
 Hooks.once("init", () => {
     Handlebars.registerHelper("translate", function (key, options) {
         const {count} = options.hash;
-        return game.i18n.format(`${key}.${count === 1 ? "one" : "other"}`, {count});
+        return game.i18n.format(`${key}.${count === 1 ? "one" : "other"}`, {
+            count,
+        });
     });
 });

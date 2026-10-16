@@ -1,4 +1,5 @@
 import {getAvailableVeils, shatterVeil} from "./cast-interception.mjs";
+import {getRemainingShatters, getShatterLimit} from "./spellweaver-class.mjs";
 
 const NO_SHATTER = "none";
 
@@ -47,7 +48,13 @@ export async function sendShatterMessage(form, actor) {
     await ChatMessage.create({
         speaker: ChatMessage.getSpeaker({actor: actor}),
         content,
-        flags: {"akashic-spellweaver": {veilId: form.slot.id, essence: essences, effect: form.effect}},
+        flags: {
+            "akashic-spellweaver": {
+                veilId: form.slot.id,
+                essence: essences,
+                effect: form.effect,
+            },
+        },
     });
 }
 
@@ -62,6 +69,9 @@ export async function shatterDialog(actor, veils) {
             essence: v.system.investedEssence,
         })),
         effects,
+        limit: getShatterLimit(actor),
+        // Limited Shatters: at the maximum, only casting without shattering stays possible
+        limitReached: getRemainingShatters(actor) <= 0,
     };
     const form = await DialogV2.wait({
         window: {
@@ -91,6 +101,8 @@ export async function shatterDialog(actor, veils) {
                 const id = effectSelect.value;
                 updateBurningPowerText(dialog, actor, id, slotsSelect);
             });
+
+            if (slotsSelect.value === NO_SHATTER) slotsSelect.dispatchEvent(new Event("change"));
         },
         content: await foundry.applications.handlebars.renderTemplate(
             "modules/akashic-spellweaver/templates/shatter-dialog.hbs",

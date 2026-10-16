@@ -6,15 +6,18 @@
         <div class="form-control">
             <select name="slot" id="shatter-slots">
                 {{#each slots}}
-                    <option value="{{this.id}}" data-essences="{{this.essence}}">
+                    <option value="{{this.id}}" data-essences="{{this.essence}}"{{#if ../limitReached}} disabled{{/if}}>
                         {{this.slot}} – {{translate "shatter.essence" count=this.essence}} {{#if this.bound}}
                         [bound]{{/if}}
                     </option>
                 {{/each}}
-                <option value="none">{{localize 'shatter.none'}}</option>
+                <option value="none"{{#if limitReached}} selected{{/if}}>{{localize 'shatter.none'}}</option>
             </select>
         </div>
     </div>
+    {{#if limitReached}}
+        <p class="hint">{{localize 'shatter.limitReached' limit=limit}}</p>
+    {{/if}}
     <div class="form-group" data-shatter-effect>
         <label class="shatter-label">
             {{localize 'shatter.effect'}}

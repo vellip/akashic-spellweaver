@@ -5,6 +5,7 @@
     "effect": "Burning Power",
     "slots": "Choose a veil slot to shatter.",
     "none": "Don't shatter a veil",
+    "limitReached": "Limited Shatters: {limit} veils are already shattered to pay costs. You can only cast without shattering a veil.",
     "essence.other": "{count} essences"
   },
   "card": {
